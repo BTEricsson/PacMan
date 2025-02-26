@@ -1,6 +1,5 @@
 using PacMan.GameObjects;
 using PacMan.GameObjects.Enums;
-using System.Windows.Forms;
 
 namespace PacMan
 {
@@ -14,7 +13,7 @@ namespace PacMan
         const int defaultLives = 3;
 
 
-        const int _blockSize = 30;
+        const int _blockSize = 34;
 
         int score = 0;
         int coinCollected = 0;
@@ -37,7 +36,7 @@ namespace PacMan
             InitializeGameBoard();
             InitializeGhosts();
             InitializePackman();
-            LoadStartGame();
+            LoadStartGame(defaultLevel);
         }
 
         private void InitializeGameBoard()
@@ -72,15 +71,15 @@ namespace PacMan
             ghosts.Add(PinkGhost);
         }
 
-        private void LoadStartGame()
+        private void LoadStartGame(int level)
         {
-            var GameLevel = _games.LoadLevel(1);
+            var GameLevel = _games.LoadLevel(level);
 
             pacMan.SetStartPosition(GameLevel.PacManStartPos, _blockSize);
-            RedGhost.SetStartPosition(GameLevel.RedGhostStartPos, _blockSize);
-            YellowGhost.SetStartPosition(GameLevel.YellowGhostStartPos, _blockSize);
-            BlueGhost.SetStartPosition(GameLevel.BlueGhostStartPos, _blockSize);
-            PinkGhost.SetStartPosition(GameLevel.PinkGhostStartPos, _blockSize);
+            RedGhost.SetStartPosition(GameLevel.RedGhost.StartLocation, GameLevel.RedGhost.StartDirection ,_blockSize);
+            YellowGhost.SetStartPosition(GameLevel.YellowGhost.StartLocation,GameLevel.YellowGhost.StartDirection ,_blockSize);
+            BlueGhost.SetStartPosition(GameLevel.BlueGhost.StartLocation,GameLevel.BlueGhost.StartDirection, _blockSize);
+            PinkGhost.SetStartPosition(GameLevel.PinkGhost.StartLocation,GameLevel.PinkGhost.StartDirection, _blockSize);
 
 
 
@@ -102,14 +101,14 @@ namespace PacMan
                 if (x is not PictureBox)
                     continue;
 
-                if (x.Tag == SketchType.Wall.ToString())
+                if (x.Tag == null)
+                    continue;
+
+                if ((string)x.Tag == SketchType.Wall.ToString())
                     walls.Add((PictureBox)x);
 
-                if (x.Tag == SketchType.Coin.ToString())
-                {
+                if ((string)x.Tag == SketchType.Coin.ToString())
                     coins.Add((PictureBox)x);
-                }
-
             }
         }
 
@@ -215,6 +214,22 @@ namespace PacMan
             GameOverScreen();
         }
 
+        private void ClearGame()
+        {
+            foreach (PictureBox wall in walls)
+            {
+                this.Controls.Remove(wall);
+            }
+
+            foreach (PictureBox coin in coins)
+            {
+                this.Controls.Remove(coin);
+            }
+
+            walls.Clear();
+            coins.Clear();
+        }
+
         private void LevelComplete()
         {
             Pnl_MainMenu.Visible = true;
@@ -226,8 +241,12 @@ namespace PacMan
 
             level++;
 
+            ClearGame();
+
+            int loadLevel = level <= _games.levels ? level : new Random().Next(1, _games.levels);
+            
             coinCollected = 0;
-            ResetCoins();
+            LoadStartGame(loadLevel);
         }
 
         private void GameOverScreen()
@@ -246,11 +265,16 @@ namespace PacMan
             }
 
             lbl_score_info.Text = $"..::: GAME OVER :::..{Environment.NewLine}SCORE: {score} LEVEL: {level}";
-            coinCollected = 0;
-            ResetCoins();
-            lives = defaultLives;
+
+
             score = 0;
+            coinCollected = 0;
+            lives = defaultLives;
             level = defaultLevel;
+
+            ResetCoins();
+            ClearGame();
+            LoadStartGame(level);
         }
     }
 }

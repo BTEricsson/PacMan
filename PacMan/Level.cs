@@ -6,21 +6,21 @@ namespace PacMan
     {
         public int Number { get; private set; }
         public Point PacManStartPos { get; private set; }
-        public Point RedGhostStartPos { get; private set; }
-        public Point PinkGhostStartPos { get; private set; }
-        public Point YellowGhostStartPos { get; private set; }
-        public Point BlueGhostStartPos { get; private set; }
+        public LevelGhost RedGhost { get; private set; }
+        public LevelGhost PinkGhost { get; private set; }
+        public LevelGhost YellowGhost { get; private set; }
+        public LevelGhost BlueGhost { get; private set; }
 
         public IList<Sketch> Sketchs;
 
-        public Level(int number, Point pacMan, Point redGhost, Point yellowGhost, Point blueGhost, Point pinkGhost )
+        public Level(int number, Point pacMan, LevelGhost redGhost, LevelGhost yellowGhost, LevelGhost blueGhost, LevelGhost pinkGhost )
         {
             Number = number;
             PacManStartPos = pacMan;
-            RedGhostStartPos = redGhost;
-            PinkGhostStartPos = pinkGhost;
-            YellowGhostStartPos = yellowGhost;
-            BlueGhostStartPos = blueGhost;
+            RedGhost = redGhost;
+            PinkGhost = pinkGhost;
+            YellowGhost = yellowGhost;
+            BlueGhost = blueGhost;
             Sketchs = [];
         }
     }
@@ -35,9 +35,9 @@ namespace PacMan
         public int LAdjust { get; }
         public int EAdjust { get; }
 
-        public Sketch(SketchType Type, Point position, int units, string direction, string location = "b", int lAdjust = 0, int eAdjust = 0)
+        public Sketch(SketchType type, Point position, int units, string direction, string location = "b", int lAdjust = 0, int eAdjust = 0)
         {
-            this.Type = Type;
+            Type = type;
             Position = position;
             Units = units;
             Direction = direction;
@@ -45,5 +45,18 @@ namespace PacMan
             LAdjust = lAdjust;
             EAdjust = eAdjust;
         }
-    }    
+    }
+
+    public class LevelGhost
+    {
+        public Point StartLocation { get; }
+        public string StartDirection { get; }
+
+        public LevelGhost(Point startLocation, string startDirection)
+        {
+            StartLocation = startLocation;
+            StartDirection = startDirection;
+        }
+    
+    }
 }
