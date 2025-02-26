@@ -1,6 +1,5 @@
 ﻿namespace PacMan.GameObjects.Enums
 {
-    [Flags]
     public enum SketchType 
     { 
         Wall = 10,

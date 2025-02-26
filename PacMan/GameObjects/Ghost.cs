@@ -21,6 +21,9 @@
         int _size = 30;
         int _offset = 5;
 
+        int _wallCollisionCount  = 0;
+        int _stepCount = 0;
+
         bool _outOfBounds;
 
         string[] _directions = { "left", "right", "up", "down", "seek"};
@@ -72,7 +75,7 @@
             return Properties.Resources.WhiteGhost;
         }
 
-        public void SetStartPosition(Point position, int blockSize)
+        public void SetStartPosition(Point position,string direction ,int blockSize)
         {
             _starPosition.X = position.X * blockSize - _size;
             _starPosition.Y = position.Y * blockSize - _size;
@@ -80,14 +83,24 @@
             _ghost.Left = _starPosition.X;
             _ghost.Top = _starPosition.Y;
 
+            _direction = direction;
+            _moveCount = random.Next(50, 60);
+
         }
 
         public void Movment(Rectangle pacman)
         {
-            if (_moveCount > 0)
-                _moveCount--;
-            else
+            _stepCount += 1;
+            _moveCount --;
+
+
+            if (_stepCount > 4)
+                _stepCount = 0;
+
+            if (_moveCount < 0)
             {
+                _stepCount = 0;
+                _wallCollisionCount = 0;
                 _moveCount = random.Next(50, 60);
                 int _prevSeek = _direction != "seek"? 0 : 1;
                 _direction =  _directions[random.Next(_directions.Length - _prevSeek)];
@@ -114,6 +127,9 @@
                 return;
             }
 
+            if (_wallCollisionCount > 1)
+                _moveCount = 0;
+
             SwitchDirection();
             DirectionMovment();
         }
@@ -124,15 +140,19 @@
             {
                 case "right":
                     _direction = "left";
+                    _wallCollisionCount += _moveCount > 3 ? 1 : 0;
                     break;
                 case "left":
                     _direction = "right";
+                    _wallCollisionCount += _moveCount > 3 ? 1 : 0;
                     break;
                 case "up":
                     _direction = "down";
+                    _wallCollisionCount += _moveCount > 3 ? 1 : 0;
                     break;
                 case "down":
                     _direction = "up";
+                    _wallCollisionCount += _moveCount > 3 ? 1 : 0;
                     break;
             }
         }

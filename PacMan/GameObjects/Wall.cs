@@ -5,6 +5,7 @@ namespace PacMan.GameObjects
     internal class Wall
     {
         int _size = 16;
+        string type = SketchType.Wall.ToString();
 
         PictureBox _wall = new PictureBox();
         Image _imgWall = Properties.Resources.Block;
@@ -23,6 +24,7 @@ namespace PacMan.GameObjects
             int calcAdjustB = (blockSize - _size) / 2;
             int LengthAdjust = sketch.Units * blockSize + sketch.LAdjust * calcAdjustB + sketch.EAdjust * calcAdjustB;
 
+            
 
 
             if (sketch.Location == "e")
@@ -47,7 +49,6 @@ namespace PacMan.GameObjects
             }
 
 
-
             _wall.Image = _imgWall;
             _wall.SizeMode = PictureBoxSizeMode.StretchImage;
 
@@ -55,8 +56,8 @@ namespace PacMan.GameObjects
             _wall.Height = height;
 
             _wall.Left = left;
-            _wall.Top = top; 
-            _wall.Tag = SketchType.Wall.ToString();
+            _wall.Top = top;
+            _wall.Tag = type;
             _wall.Visible = true;
             _wall.Enabled = true;
             _wall.BackColor = Color.Black;
