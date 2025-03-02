@@ -1,8 +1,10 @@
+using Pac_Man_V1.GameObjects.Enums;
 using PacMan.GameObjects;
 using PacMan.GameObjects.Enums;
 
 namespace PacMan
 {
+
     public partial class Form1 : Form
     {
 
@@ -21,8 +23,12 @@ namespace PacMan
         int level = defaultLevel;
         int lives = defaultLives;
 
+        screenViewType ViewScreen = screenViewType.none;
+
         List<PictureBox> walls = new List<PictureBox>();
         List<PictureBox> coins = new List<PictureBox>();
+
+        List<Score> Scores = new List<Score>();
 
         Game _games = new Game();
 
@@ -36,7 +42,7 @@ namespace PacMan
             InitializeGameBoard();
             InitializeGhosts();
             InitializePackman();
-            LoadStartGame(defaultLevel);
+            LoadGame(defaultLevel);
         }
 
         private void InitializeGameBoard()
@@ -49,6 +55,8 @@ namespace PacMan
             var y = ((this.Height - top) - Pnl_MainMenu.Height) / 2;
 
             Pnl_MainMenu.Location = new Point(x, y);
+
+            LoadStartScreed();          
         }
 
         private void InitializePackman()
@@ -71,7 +79,7 @@ namespace PacMan
             ghosts.Add(PinkGhost);
         }
 
-        private void LoadStartGame(int level)
+        private void LoadGame(int level)
         {
             var GameLevel = _games.LoadLevel(level);
 
@@ -112,7 +120,7 @@ namespace PacMan
             }
         }
 
-        private void GameTimerEvent(object sender, EventArgs e)
+        private void GameStartTimerEvent(object sender, EventArgs e)
         {
             pacMan.Movment(this.ClientSize.Width, this.ClientSize.Height);
 
@@ -127,7 +135,7 @@ namespace PacMan
             }
 
             if (coins.Count == coinCollected)
-                LevelComplete();
+                LevelCompleteScreen();
             
 
             GhostsMovment();
@@ -161,11 +169,26 @@ namespace PacMan
 
         private void startGameClick(object sender, EventArgs e)
         {
+            if (ViewScreen == screenViewType.start)
+            {
+                LoadStartScreed();
+                return;
+            }
+
+            if (ViewScreen == screenViewType.score)
+            {
+                ScoreScreen();
+                return;
+            }
+
+
+
+
             Pnl_MainMenu.Enabled = false;
             Pnl_MainMenu.Visible = false;
 
+            pacMan.RestPacMan();
             pacMan.ResetMovment();
-
             ResetGhostsLocation();
             GameTimer.Start();
         }
@@ -176,15 +199,6 @@ namespace PacMan
             YellowGhost.ResetLocation();
             BlueGhost.ResetLocation();
             PinkGhost.ResetLocation();
-        }
-
-        private void ResetCoins()
-        {
-            foreach (PictureBox coin in coins)
-            {
-                coin.Visible = true;
-            }
-
         }
 
         private void CollectingCoins(PictureBox coin)
@@ -205,9 +219,11 @@ namespace PacMan
             if (!pacMan.IntersectsWith(ghost.Bounds))
                 return;
 
-            if (lives > 1)
+            lives--;
+
+            if (lives > 0)
             {
-                GameOverScreen();
+                DiedScreen();
                 return;
             }
 
@@ -230,14 +246,19 @@ namespace PacMan
             coins.Clear();
         }
 
-        private void LevelComplete()
+        private void LoadStartScreed()
         {
-            Pnl_MainMenu.Visible = true;
+            lbl_score_info.Text = $"...::: PACMAN :::...{Environment.NewLine}{Environment.NewLine}UP / DOWN / LEFT / RIGHT";
+            btn_Play.Text = "Play";
+            ViewScreen = screenViewType.none;
             Pnl_MainMenu.Enabled = true;
-            GameTimer.Stop();
-            pacMan.RestPacMan();
+            Pnl_MainMenu.Visible = true;
+        }
 
-            lbl_score_info.Text = $"..::: YOU WIN :::..{Environment.NewLine}LEVEL: {level} SCORE: {score}";
+        private void LevelCompleteScreen()
+        {
+            GameTimer.Stop();
+            lbl_score_info.Text = $"..::: YOU WIN :::..{Environment.NewLine}{Environment.NewLine}LEVEL: {level} SCORE: {score}";
 
             level++;
 
@@ -246,35 +267,84 @@ namespace PacMan
             int loadLevel = level <= _games.levels ? level : new Random().Next(1, _games.levels);
             
             coinCollected = 0;
-            LoadStartGame(loadLevel);
+            LoadGame(loadLevel);
+
+            btn_Play.Text = "Go";
+            Pnl_MainMenu.Visible = true;
+            Pnl_MainMenu.Enabled = true;
+        }
+
+        public void DiedScreen()
+        {
+            GameTimer.Stop();
+
+            lbl_score_info.Text = $"..::: YOU DIED :::..{Environment.NewLine}{Environment.NewLine} LIVES: {lives}";
+
+            btn_Play.Text = "Go";
+
+            Pnl_MainMenu.Visible = true;
+            Pnl_MainMenu.Enabled = true;
+
         }
 
         private void GameOverScreen()
         {
-            Pnl_MainMenu.Visible = true;
-            Pnl_MainMenu.Enabled = true;
             GameTimer.Stop();
-            pacMan.RestPacMan();
+            setMyScore(level, score);
 
-            lives--;
+            lbl_score_info.Text = $"..::: GAME OVER :::..{Environment.NewLine}{Environment.NewLine}SCORE: {score} LEVEL: {level}";
 
-            if (lives != 0)
-            {
-                lbl_score_info.Text = $"..::: YOU DIED :::..{Environment.NewLine} LIVES: {lives}";
-                return;
-            }
-
-            lbl_score_info.Text = $"..::: GAME OVER :::..{Environment.NewLine}SCORE: {score} LEVEL: {level}";
-
+            
 
             score = 0;
             coinCollected = 0;
             lives = defaultLives;
             level = defaultLevel;
 
-            ResetCoins();
             ClearGame();
-            LoadStartGame(level);
+            LoadGame(level);
+            btn_Play.Text = "Score";
+            ViewScreen = screenViewType.score;
+
+            Pnl_MainMenu.Visible = true;
+            Pnl_MainMenu.Enabled = true;
+
+        }
+
+        private void ScoreScreen()
+        { 
+            string Screen = $"..::: SCORE :::..{Environment.NewLine}";
+
+            var topScores = Scores.OrderByDescending(S => S.score).Take(3);
+
+            foreach (Score score in topScores)
+            {
+                var ThisScore = score.thisScore ? "* " : "  ";
+                Screen += $"{ThisScore}{score.score} {score.level}{Environment.NewLine}";                
+            }
+            lbl_score_info.Text = Screen;
+
+            btn_Play.Text = "Reset";
+            ViewScreen = screenViewType.start;
+
+            Pnl_MainMenu.Visible = true;
+            Pnl_MainMenu.Enabled = true;
+        }
+
+        private void setMyScore(int level, int score)
+        {
+            clearScore();
+            var newScore = new Score() { level = level, score = score, thisScore = true  };
+            Scores.Add(newScore);
+        }
+
+        private void clearScore()
+        {
+            foreach (Score score in Scores)
+            {
+                score.thisScore = false;
+            }
+        
         }
     }
 }
