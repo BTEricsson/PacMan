@@ -2,6 +2,7 @@
 
 namespace PacMan
 {
+
     public class Game
     {
         private IList<Level> _levels = new List<Level>();
